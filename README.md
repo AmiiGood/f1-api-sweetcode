@@ -34,7 +34,7 @@ Before running this project, make sure you have:
 1. Clone the repository
 
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/AmiiGood/f1-api-sweetcode.git
 cd f1-api-sweetcode
 ```
 
@@ -79,8 +79,6 @@ The API will be available at `http://localhost:3000`
 
 - `GET /api/drivers` - Get all drivers (with pagination)
 - `GET /api/drivers/:id` - Get specific driver
-- `GET /api/drivers/nationality/list` - Get list of all nationalities
-- `GET /api/drivers/:id/results` - Get driver's race results
 
 ### Races
 
@@ -107,7 +105,6 @@ The API will be available at `http://localhost:3000`
 
 - `nationality`: Filter drivers by nationality
 - `search`: Search in driver names
-- `year`: Filter results by year
 
 ## Project Structure
 
@@ -142,3 +139,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Formula 1 for the inspiration
 - [Ergast API](http://ergast.com/mrd/) for the reference implementation
+
