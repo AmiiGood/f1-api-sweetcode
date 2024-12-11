@@ -1,0 +1,33 @@
+{
+  "name": "f1-api-sweetcode",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "import-data": "node src/scripts/importData.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.6.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "mongoose": "^8.8.4",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
