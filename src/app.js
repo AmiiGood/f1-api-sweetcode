@@ -13,7 +13,7 @@ const racesRoutes = require("./routes/v1/races");
 const circuitsRoutes = require("./routes/v1/circuits");
 const resultsRoutes = require("./routes/v1/results");
 
-const { errorHandler } = require("./middleware/errorHandler");
+const { f1ErrorHandler } = require("./middleware/errorHandler");
 const notFoundHandler = require("./middleware/notFoundHandler");
 
 const app = express();
@@ -64,7 +64,7 @@ app.use("/api", apiRouter);
 app.use(notFoundHandler);
 
 // Global error handler
-app.use(errorHandler);
+app.use(f1ErrorHandler);
 
 // Export app for server.js
 module.exports = app;

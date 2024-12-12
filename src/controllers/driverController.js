@@ -90,13 +90,20 @@ exports.getDriver = async (req, res, next) => {
     const driver = await Driver.findOne({ driverId: req.params.id });
 
     if (!driver) {
-      return next(new AppError(404, "Driver not found"));
+      throw new AppError(404, `Driver with ID ${req.params.id} not found`);
     }
 
     let responseData = driver.toObject();
 
     if (includeImage === "true") {
-      responseData.imageUrl = await getWikipediaImage(driver.url);
+      const imageUrl = await getWikipediaImage(driver.url);
+      if (!imageUrl) {
+        throw new AppError(
+          404,
+          `No image found for the driver ${driver.forename} ${driver.surname}`
+        );
+      }
+      responseData.imageUrl = imageUrl;
     }
 
     res.json({
