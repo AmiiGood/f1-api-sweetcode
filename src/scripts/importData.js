@@ -95,6 +95,7 @@ async function importDrivers(dataPath) {
           surname: driver.surname,
           dateOfBirth: new Date(driver.dob),
           nationality: driver.nationality,
+          url: driver.url,
         },
         { upsert: true, new: true }
       );

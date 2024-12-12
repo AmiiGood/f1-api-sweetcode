@@ -6,5 +6,6 @@ const cacheMiddleware = require("../../middleware/cache");
 
 router.get("/", cacheMiddleware(300), driverController.getDrivers);
 router.get("/:id", cacheMiddleware(300), driverController.getDriver);
+router.get("/:id/image", cacheMiddleware(300), driverController.getDriverImage);
 
 module.exports = router;
