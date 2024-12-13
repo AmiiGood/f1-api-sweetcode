@@ -1,6 +1,7 @@
 const Driver = require("../models/Driver");
 const { AppError } = require("../middleware/errorHandler");
 const getWikipediaImage = require("../utils/wikipedia");
+const axios = require("axios");
 
 exports.getDrivers = async (req, res, next) => {
   try {
@@ -13,6 +14,25 @@ exports.getDrivers = async (req, res, next) => {
       order = "asc",
       includeImage = false,
     } = req.query;
+
+    // Validación de parámetros
+    if (page < 1 || limit < 1) {
+      throw new AppError(400, "Invalid pagination parameters");
+    }
+
+    if (!["asc", "desc"].includes(order.toLowerCase())) {
+      throw new AppError(400, "Invalid sort order");
+    }
+
+    const allowedSortFields = [
+      "surname",
+      "forename",
+      "nationality",
+      "driverId",
+    ];
+    if (!allowedSortFields.includes(sortBy)) {
+      throw new AppError(406, `Cannot sort by ${sortBy}`);
+    }
 
     const query = {};
     if (nationality) query.nationality = nationality;
@@ -31,17 +51,25 @@ exports.getDrivers = async (req, res, next) => {
       Driver.countDocuments(query),
     ]);
 
+    if (!drivers.length) {
+      throw new AppError(404, "No drivers found matching your criteria");
+    }
+
     let processedDrivers = drivers.map((driver) => driver.toObject());
 
     if (includeImage === "true") {
-      processedDrivers = await Promise.all(
-        processedDrivers.map(async (driver) => {
-          return {
-            ...driver,
-            imageUrl: await getWikipediaImage(driver.url),
-          };
-        })
-      );
+      try {
+        processedDrivers = await Promise.all(
+          processedDrivers.map(async (driver) => {
+            return {
+              ...driver,
+              imageUrl: await getWikipediaImage(driver.url),
+            };
+          })
+        );
+      } catch (error) {
+        throw new AppError(502, "Error fetching driver images");
+      }
     }
 
     res.json({
@@ -52,13 +80,16 @@ exports.getDrivers = async (req, res, next) => {
       total,
     });
   } catch (error) {
-    console.error("Error in getDrivers:", error);
     next(error);
   }
 };
 
 exports.getDriver = async (req, res, next) => {
   try {
+    if (!req.params.id) {
+      throw new AppError(400, "Driver ID is required");
+    }
+
     const { includeImage = false } = req.query;
     const driver = await Driver.findOne({ driverId: req.params.id });
 
@@ -69,11 +100,12 @@ exports.getDriver = async (req, res, next) => {
     let responseData = driver.toObject();
 
     if (includeImage === "true") {
-      const imageUrl = await getWikipediaImage(driver.url);
-      if (imageUrl) {
-        responseData.imageUrl = imageUrl;
-      } else {
-        responseData.imageUrl = "Image not found";
+      try {
+        const imageUrl = await getWikipediaImage(driver.url);
+        responseData.imageUrl = imageUrl || "Driver image not found";
+      } catch (error) {
+        if (error instanceof AppError) throw error;
+        throw new AppError(502, "Error fetching driver image");
       }
     }
 
@@ -88,41 +120,45 @@ exports.getDriver = async (req, res, next) => {
 
 exports.getDriverImage = async (req, res, next) => {
   try {
+    if (!req.params.id) {
+      throw new AppError(400, "Driver ID is required");
+    }
+
     const driver = await Driver.findOne({ driverId: req.params.id });
 
     if (!driver) {
-      return next(new AppError(404, "Driver not found"));
+      throw new AppError(404, "Driver not found");
     }
 
     const imageUrl = await getWikipediaImage(driver.url);
 
     if (!imageUrl) {
-      return next(new AppError(404, "Image not found"));
+      throw new AppError(404, "Image not found");
     }
 
     if (req.query.redirect === "true") {
       res.redirect(imageUrl);
     } else {
       try {
-        // Descarga la imagen
         const imageResponse = await axios.get(imageUrl, {
           responseType: "arraybuffer",
+          timeout: 5000, // 5 segundos de timeout
         });
 
-        // Detecta el tipo de contenido de la imagen
         const contentType = imageResponse.headers["content-type"];
 
         res.set({
           "Content-Type": contentType,
           "Content-Length": imageResponse.data.length,
-          "Cache-Control": "public, max-age=86400", // Cache por 24 horas
+          "Cache-Control": "public, max-age=86400",
         });
 
-        // Envía la imagen directamente
         res.send(imageResponse.data);
       } catch (error) {
-        console.error("Error downloading image:", error);
-        return next(new AppError(500, "Error downloading image"));
+        if (error.code === "ECONNABORTED") {
+          throw new AppError(504, "Image download timeout");
+        }
+        throw new AppError(502, "Error downloading image");
       }
     }
   } catch (error) {
