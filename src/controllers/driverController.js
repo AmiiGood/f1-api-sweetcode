@@ -3,6 +3,7 @@ const { AppError } = require("../middleware/errorHandler");
 const getWikipediaImage = require("../utils/wikipedia");
 const axios = require("axios");
 
+//GET /api/drivers
 exports.getDrivers = async (req, res, next) => {
   try {
     const {
@@ -161,6 +162,52 @@ exports.getDriverImage = async (req, res, next) => {
         throw new AppError(502, "Error downloading image");
       }
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+//POST /api/drivers
+exports.createDriver = async (req, res, next) => {
+  try {
+    const {
+      driverId,
+      driverRef,
+      number,
+      code,
+      forename,
+      surname,
+      dob,
+      nationality,
+      url,
+    } = req.body;
+
+    if (!driverId || !forename || !surname) {
+      throw new AppError(400, "Missing required fields");
+    }
+
+    const existingDriver = await Driver.findOne({ driverId });
+
+    if (existingDriver) {
+      throw new AppError(409, `Driver with ID ${driverId} already exists`);
+    }
+
+    const driver = await Driver.create({
+      driverId,
+      driverRef,
+      number,
+      code,
+      forename,
+      surname,
+      dob: dob ? new Date(dob) : undefined,
+      nationality,
+      url,
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: driver,
+    });
   } catch (error) {
     next(error);
   }

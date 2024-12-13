@@ -93,7 +93,7 @@ async function importDrivers(dataPath) {
           code: driver.code,
           forename: driver.forename,
           surname: driver.surname,
-          dateOfBirth: new Date(driver.dob),
+          dob: new Date(driver.dob),
           nationality: driver.nationality,
           url: driver.url,
         },
