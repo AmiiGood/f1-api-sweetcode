@@ -32,11 +32,28 @@ const f1Errors = {
     message:
       "Like when Hamilton couldn't find Glock on the last lap. We couldn't find the driver you're looking for.",
   },
+  406: {
+    title: "Not Acceptable",
+    event: "Ricciardo's Shoe Celebration (Monza 2021)",
+    message:
+      "Like drinking from a shoe isn't for everyone, the server can't accept your request as it is.",
+  },
   408: {
     title: "Request Timeout",
-    event: "Mercedes' 24-hour Pit Stop (Monaco 2021)",
+    event: "Mercedes' Endless Pit Stop (Monaco 2021)",
     message:
       "Like Bottas' never-ending pit stop in Monaco. The request took too long to complete.",
+  },
+  410: {
+    title: "Gone",
+    event: "Hülkenberg's Podium Dreams (Forever)",
+    message:
+      "Like Hülkenberg's elusive podium, the resource you’re looking for is gone forever.",
+  },
+  418: {
+    title: "I'm a Teapot",
+    event: "Kimi’s 'Leave Me Alone' Radio Moment",
+    message: "Like Kimi doesn't want instructions, I'm a teapot, not a server.",
   },
   429: {
     title: "Too Many Requests",
@@ -44,10 +61,22 @@ const f1Errors = {
     message:
       "Like when DRS activates too many times per lap. You're making too many requests.",
   },
+  451: {
+    title: "Unavailable for Legal Reasons",
+    event: "Spygate Scandal (2007)",
+    message:
+      "Like McLaren's data controversy, this resource is unavailable for legal reasons.",
+  },
   500: {
     title: "Internal Server Error",
     event: "McLaren Honda Engine (2015-2017)",
     message: "Like the McLaren-Honda era. We're having internal power issues.",
+  },
+  502: {
+    title: "Bad Gateway",
+    event: "Red Bull's Renault Engine Woes (2015)",
+    message:
+      "Like when Red Bull had unreliable power units. There's a communication breakdown.",
   },
   503: {
     title: "Service Unavailable",
@@ -55,23 +84,29 @@ const f1Errors = {
     message:
       "Like the 2021 Spa GP. The service is currently unavailable due to conditions.",
   },
+  504: {
+    title: "Gateway Timeout",
+    event: "Senna's Retirement (Monaco 1988)",
+    message:
+      "Like when Senna stopped unexpectedly at Monaco. The server didn't respond in time.",
+  },
 };
 
 const f1ErrorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
 
-  // Manejar errores específicos de Mongoose/MongoDB
+  // Handle specific Mongoose/MongoDB errors
   if (err.name === "CastError") {
-    err = new AppError(400, "ID de piloto inválido");
+    err = new AppError(400, "Invalid driver ID");
   }
   if (err.name === "ValidationError") {
-    err = new AppError(400, "Datos de piloto inválidos");
+    err = new AppError(400, "Invalid driver data");
   }
 
-  // Obtener el mensaje temático de F1
+  // Get F1-themed error message
   const f1Error = f1Errors[err.statusCode] || f1Errors[500];
 
-  // Construir la respuesta
+  // Build the response
   const response = {
     status: err.status || "error",
     error: {
@@ -83,7 +118,7 @@ const f1ErrorHandler = (err, req, res, next) => {
     },
   };
 
-  // En desarrollo, incluir el stack trace
+  // Include stack trace in development
   if (process.env.NODE_ENV === "development") {
     response.error.stack = err.stack;
   }
@@ -95,7 +130,7 @@ const errorHandler = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
 
-  if (environment === "development") {
+  if (process.env.NODE_ENV === "development") {
     res.status(err.statusCode).json({
       status: err.status,
       error: err,
@@ -103,14 +138,14 @@ const errorHandler = (err, req, res, next) => {
       stack: err.stack,
     });
   } else {
-    // Error response for production
+    // Production error response
     if (err.isOperational) {
       res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
       });
     } else {
-      // Programming or unknown errors
+      // Unknown or programming error
       console.error("ERROR 💥", err);
       res.status(500).json({
         status: "error",
@@ -122,6 +157,6 @@ const errorHandler = (err, req, res, next) => {
 
 module.exports = {
   AppError,
-  errorHandler,
   f1ErrorHandler,
+  errorHandler,
 };
