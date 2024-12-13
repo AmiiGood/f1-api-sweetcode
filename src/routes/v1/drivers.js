@@ -9,5 +9,6 @@ router.get("/", cacheMiddleware(300), driverController.getDrivers);
 router.get("/:id", cacheMiddleware(300), driverController.getDriver);
 router.get("/:id/image", cacheMiddleware(300), driverController.getDriverImage);
 router.post("/", validate(driverSchema), driverController.createDriver);
+router.delete("/:id", driverController.deleteDriver);
 
 module.exports = router;
